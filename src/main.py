@@ -3,6 +3,10 @@ from collections import UserDict
 from tokens import Scanner
 from parser import Collection, ExpressionType, Atom, Parser, S_Expression
 
+import traceback
+import readline
+import sys
+
 TRUE = Atom(ExpressionType.SYMBOL, True, None)
 FALSE = Atom(ExpressionType.SYMBOL, False, None)
 # FALSE.__bool__ = lambda x : False
@@ -48,6 +52,8 @@ class Env(UserDict):
 
 global_env = Env()
 global_env.update({"a": convert("aaaaaaa")})
+global_env.update({"T": TRUE,
+                   "F": FALSE})
 
 
 def eval(x: S_Expression, env=global_env):
@@ -130,28 +136,47 @@ def test(src):
         print(eval(exp))
 
 
+def repl(prompt="lisp> "):
+    "A read eval print loop."
+    while True:
+        try:
+            ast = Parser(Scanner(input(prompt)).scan_tokens()).parse()
+            for exp in ast:
+                val = eval(exp)
+                if val is not None:
+                    print(str(val))
+        except (KeyboardInterrupt, EOFError):
+            print("\nExiting lisp")
+            sys.exit()
+        except:
+            print("An error occurred. Here's the Python stack trace:")
+            traceback.print_exc()
+
+
 if __name__ == "__main__":
-    test("(quote aaa)")
-    test("(q aaa)")
-    test("(atom? (quote aaa))")
-    test("(atom? (quote (a a)))")
-    test("(eq? (quote a) (quote a))")
-    test("(eq? (quote a) (quote b))")
-    test("(car (quote (a b c)))")
-    test("(cdr (quote (a b c)))")
-    test("(cons (quote a) (quote (a b c)))")
-    test("(cons (q (a b c)) (q (1 23)))")
-    test("(cond ((eq? 1 2) (q a)) ((eq? 2 2) (q b)))")
-    test("(null? (q ()))")
-    test("(null? (q a))")
-    test("(if (eq? 1 1) (q a) (q b))")
-    test("(if (eq? 1 3) (q a) (q b))")
-    test("a")
-    test("(eq? a (q aaaaaaa))")
-    test("(set! a 55)")
-    test("a")
-    test("(define b 55)")
-    test("(eq? a b)")
-    test("(define cmp (lambda (a b) (eq? a b)))")
-    # test("(cmp 1 1)")
-    test("(cmp cmp cmp)")
+    # test("(quote aaa)")
+    # test("(q aaa)")
+    # test("(atom? (quote aaa))")
+    # test("(atom? (quote (a a)))")
+    # test("(eq? (quote a) (quote a))")
+    # test("(eq? (quote a) (quote b))")
+    # test("(car (quote (a b c)))")
+    # test("(cdr (quote (a b c)))")
+    # test("(cons (quote a) (quote (a b c)))")
+    # test("(cons (q (a b c)) (q (1 23)))")
+    # test("(cond ((eq? 1 2) (q a)) ((eq? 2 2) (q b)))")
+    # test("(null? (q ()))")
+    # test("(null? (q a))")
+    # test("(if (eq? 1 1) (q a) (q b))")
+    # test("(if (eq? 1 3) (q a) (q b))")
+    # test("a")
+    # test("(eq? a (q aaaaaaa))")
+    # test("(set! a 55)")
+    # test("a")
+    # test("(define b 55)")
+    # test("(eq? a b)")
+    # test("(define cmp (lambda (a b) (eq? a b)))")
+    # # test("(cmp 1 1)")
+    # test("(cmp cmp cmp)")
+    # test("(eq? 1 1) (eq? 2 2)")
+    repl()
