@@ -28,6 +28,11 @@ class Token:
         return repr
 
 
+def scan(src: str) -> list[Token]:
+    scanner = Scanner(src)
+    return scanner.scan()
+
+
 class Scanner:
     def __init__(self, source: str):
         self.source = source
@@ -36,7 +41,7 @@ class Scanner:
         self.current = 0
         self.line = 1
 
-    def scan_tokens(self):
+    def scan(self):
         while not self.is_at_end():
             # We're at the beginning of a lexeme
             self.start = self.current

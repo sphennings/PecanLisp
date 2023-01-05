@@ -68,6 +68,11 @@ class ParseError(Exception):
     pass
 
 
+def parse(tokens: list[Token]) -> list[S_Expression]:
+    parser = Parser(tokens)
+    return parser.parse()
+
+
 class Parser:
     def __init__(self, tokens: list[Token]):
         self.tokens = tokens

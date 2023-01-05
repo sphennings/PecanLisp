@@ -1,10 +1,10 @@
 from collections import UserDict
 
-from tokens import Scanner
-from parser import Collection, ExpressionType, Atom, Parser, S_Expression
+from tokens import scan
+from parser import parse, Collection, ExpressionType, Atom, S_Expression
 
 import traceback
-import readline
+import readline  # noqa: F401
 import sys
 
 TRUE = Atom(ExpressionType.SYMBOL, True, None)
@@ -61,77 +61,76 @@ def eval(x: S_Expression, env=global_env):
         if x.type == ExpressionType.SYMBOL:
             # Look up the symbol in the environment
             return env[x]
-        
+
         elif x.type == ExpressionType.NUMBER:
             # Constant literal
             return x
-        
+
     elif isinstance(x, Collection):
         match x.value:
             case Atom(value="quote") | Atom(value="q"), exp:
                 # (quote exp) or (q exp)
                 return exp
-            
+
             case Atom(value="atom?"), exp:
                 # (atom? exp)
                 return convert(isinstance(eval(exp, env), Atom))
-            
+
             case Atom(value="eq?"), exp1, exp2:
                 # (eq? exp1 exp2)
                 v1, v2 = eval(exp1, env), eval(exp2, env)
                 return convert((isinstance(v1, Atom) and (v1 == v2)))
-            
+
             case Atom(value="car"), exp:
                 # (car exp)
                 return eval(exp, env)[0]
-            
+
             case Atom(value="cdr"), exp:
                 # (car exp)
                 return convert(eval(exp, env)[1:])
-            
+
             case Atom(value="cons"), exp1, exp2:
                 # (cons exp1 exp2)
                 return convert([eval(exp1, env)] + list(eval(exp2, env)))
-            
+
             case Atom(value="cond"), *exps:
                 # (cond (p1 e1) ... (pn en))
                 for (p, e) in exps:
                     print(p, e)
                     if eval(p, env):
                         return eval(e, env)
-                    
+
             case Atom(value="null?"), exp:
                 # (null? exp)
                 return convert(eval(exp, env) == [])
-            
+
             case Atom(value="if"), test, conseq, alt:
                 # (if test conseq alt)
                 if eval(test, env):
                     return eval(conseq, env)
                 else:
                     return eval(alt, env)
-                
+
             case Atom(value="set!"), var, exp:
                 # (set! var exp)
                 env.set_var(var, convert(eval(exp, env)))
-                
+
             case Atom(value="define"), var, exp:
                 # (define var exp)
                 env[var] = eval(exp, env)
-                
+
             case Atom(value="lambda"), vars, exp:
                 # (lambda (var*) exp)
                 return lambda *args: eval(exp, Env(zip(vars, args), env))
             case _:
                 proc, *exps = [eval(exp, env) for exp in x.value]
                 return proc(*exps)
-                
 
 
 def test(src):
     print(f"Testing: {src}")
-    tokens = Scanner(src).scan_tokens()
-    ast = Parser(tokens).parse()
+    tokens = scan(src)
+    ast = parse(tokens)
     for exp in ast:
         print(eval(exp))
 
@@ -140,7 +139,7 @@ def repl(prompt="lisp> "):
     "A read eval print loop."
     while True:
         try:
-            ast = Parser(Scanner(input(prompt)).scan_tokens()).parse()
+            ast = parse(scan(input(prompt)))
             for exp in ast:
                 val = eval(exp)
                 if val is not None:
